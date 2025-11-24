@@ -13,6 +13,8 @@ def tz_brazil_now():
     return datetime.now(timezone(timedelta(hours=-3)))
 
 dt_brasil = tz_brazil_now().strftime("%Y-%m-%d")
+dt_ontem = (tz_brazil_now() - timedelta(days=1)).strftime("%Y-%m-%d")
+dados_de_ontem = False
 
 load_dotenv()
 
@@ -39,6 +41,29 @@ s3 = session.client('s3')
 
 bucket_name = os.getenv("S3_BUCKET")
 s3_object_key = f'outputs/{dt_brasil}/omqb_results.csv' 
+
+def s3_key_exists(bucket, key):
+    """Retorna True se o arquivo existir no S3."""
+    try:
+        s3.head_object(Bucket=bucket, Key=key)
+        return True
+    except s3.exceptions.NoSuchKey:
+        return False
+    except Exception:
+        return False
+
+if not s3_key_exists(bucket_name, s3_object_key):
+    
+    # usar o arquivo de ontem
+    fallback_key = f'outputs/{dt_ontem}/omqb_results.csv'
+    if s3_key_exists(bucket_name, fallback_key):
+        dados_de_ontem = True
+        s3_object_key = fallback_key
+    else:
+        st.error("Arquivo de hoje e de ontem não encontrados no S3.")
+        st.stop()
+
+
 
 # Define the local path where you want to save the downloaded file
 local_file_path = 'omqb_results.csv'
@@ -84,7 +109,7 @@ df = df[df['Back_Model'] != "Sugestão: Fique de fora no modelo"]
 df["Entrada"] = np.where(df['Back_Model'].str.startswith("Sugestão: Back Home"), df["Home"], np.where(df['Back_Model'].str.startswith("Sugestão: Back Away"), df["Away"], None))
 df["Odd Sugerida"] = np.where(df['Back_Model'].str.startswith("Sugestão: Back Home"), df["Odd_Back_H"], np.where(df['Back_Model'].str.startswith("Sugestão: Back Away"), df["Odd_Back_A"], None))
 
-df_filtrado = df[["Data", "League", "Home", "Away", "Entrada", "Odd Sugerida"]]
+df_filtrado = df[["Data", "Hora" "League", "Home", "Away", "Entrada", "Odd Sugerida"]]
 df_filtrado["Odd Sugerida"] = df_filtrado["Odd Sugerida"].apply(
     lambda x: f'<span class="odd-badge">{x}</span>'
 )
@@ -120,7 +145,9 @@ fig.update_layout(
 
 
 st.title("MM Tips")
-st.write("Entradas do dia")
+st.write(f"Entradas do dia {dt_brasil}")
+if dados_de_ontem:
+    st.warning(f"Entradas de hoje ainda não disponíveis (<7h). Mostrando entradas enviadas ontem: {dt_ontem}")
 
 # --- TABELA HTML ---
 html = "<table class='custom-table'>"
