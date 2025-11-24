@@ -109,7 +109,7 @@ df = df[df['Back_Model'] != "Sugestão: Fique de fora no modelo"]
 df["Entrada"] = np.where(df['Back_Model'].str.startswith("Sugestão: Back Home"), df["Home"], np.where(df['Back_Model'].str.startswith("Sugestão: Back Away"), df["Away"], None))
 df["Odd Sugerida"] = np.where(df['Back_Model'].str.startswith("Sugestão: Back Home"), df["Odd_Back_H"], np.where(df['Back_Model'].str.startswith("Sugestão: Back Away"), df["Odd_Back_A"], None))
 
-df_filtrado = df[["Data", "Hora" "League", "Home", "Away", "Entrada", "Odd Sugerida"]]
+df_filtrado = df[["Data", "Hora", "League", "Home", "Away", "Entrada", "Odd Sugerida"]]
 df_filtrado["Odd Sugerida"] = df_filtrado["Odd Sugerida"].apply(
     lambda x: f'<span class="odd-badge">{x}</span>'
 )
