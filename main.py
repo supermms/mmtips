@@ -134,7 +134,7 @@ fig.add_trace(go.Scatter(
 fig.update_layout(
     height=420,
     margin=dict(l=30, r=30, t=50, b=30),
-    title="Evolução do P/L Acumulado",
+    title="Evolução do P/L Acumulado (Descontando comissão Betfair)",
     xaxis_title="Número de Entradas",
     yaxis_title="P/L Acumulado",
     hovermode="x unified"
